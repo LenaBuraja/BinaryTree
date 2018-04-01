@@ -9,6 +9,10 @@ namespace BinaryTree {
 		public string Title;
 		public Node<Tn> Root = null;
 
+		private enum SIDE {
+			LEFT, RIGHT, NONE
+		}
+
 		public Tree(string _title) {
 			this.Title = _title;
 		}
@@ -52,52 +56,73 @@ namespace BinaryTree {
 		}
 
 		public void Remove(Tn keyToRemove) {
-			Node<Tn> nodeToRemove = Find(keyToRemove, out Node<Tn> rootNode);
-
-			if (nodeToRemove.Right == null) {
-				if (rootNode == null) {
-					Root = nodeToRemove.Left;
-				} else {
-					if (rootNode.Key.CompareTo(nodeToRemove.Key) > 0) {
-						rootNode.Left = nodeToRemove.Left;
-					} else if (rootNode.Key.CompareTo(nodeToRemove.Key) < 0) {
-						rootNode.Right = nodeToRemove.Right;
+			Node<Tn> prevNode = null;
+			SIDE prevStep = SIDE.NONE;
+			Node<Tn> node = this.Root;
+			while (node != null) {
+				var compare = node.Key.CompareTo(keyToRemove);
+				if (compare == 0) {
+					if (node.Left == null && node.Right == null) {
+						if (prevNode == null) {
+							this.Root = null;
+							return;
+						}
+						if (prevStep == SIDE.LEFT) {
+							prevNode.Left = null;
+							return;
+						}
+						prevNode.Right = null;
+						return;
 					}
-				}
-
-			} else if (nodeToRemove.Right.Left == null) {
-				nodeToRemove.Right.Left = nodeToRemove.Left;
-				if (rootNode == null) {
-					Root = nodeToRemove.Right;
-				} else {
-					if (rootNode.Key.CompareTo(nodeToRemove.Key) > 0) {
-						rootNode.Left = nodeToRemove.Right;
-					} else if (rootNode.Key.CompareTo(nodeToRemove.Key) < 0) {
-						rootNode.Right = nodeToRemove.Right;
+					if (node.Left == null) {
+						if (prevNode == null) {
+							this.Root = node.Right;
+							return;
+						}
+						if (prevStep == SIDE.LEFT) {
+							prevNode.Left = node.Right;
+						} else {
+							prevNode.Right = node.Right;
+						}
+						return;
 					}
-				}
-
-			} else {
-				Node<Tn> lastLeft = nodeToRemove.Right.Left;
-				Node<Tn> rootLastLeft = nodeToRemove.Right;
-				while (lastLeft.Left != null) {
-					rootLastLeft = lastLeft;
-					lastLeft = lastLeft.Left;
-				}
-				rootLastLeft.Left = lastLeft.Right;
-				lastLeft.Left = nodeToRemove.Left;
-				lastLeft.Right = nodeToRemove.Right;
-				if (rootNode == null) {
-					Root = lastLeft;
-				} else {
-					if (rootNode.Key.CompareTo(nodeToRemove.Key) > 0) {
-						rootNode.Left = lastLeft;
-					} else if (rootNode.Key.CompareTo(nodeToRemove.Key) < 0) {
-						rootNode.Right = lastLeft;
+					if (node.Right == null) {
+						if (prevNode == null) {
+							this.Root = node.Left;
+							return;
+						}
+						if (prevStep == SIDE.LEFT) {
+							prevNode.Left = node.Left;
+						} else {
+							prevNode.Right = node.Left;
+						}
+						return;
 					}
+					Node<Tn> prevNodeForReplacement = null;
+					Node<Tn> nodeForReplacement = node.Right;
+					while (nodeForReplacement.Left != null) {
+						prevNodeForReplacement = nodeForReplacement;
+						nodeForReplacement = nodeForReplacement.Left;
+					}
+					node.Key = nodeForReplacement.Key;
+					if (prevNodeForReplacement == null) {
+						node.Right = nodeForReplacement.Right;
+					} else {
+						prevNodeForReplacement.Left = nodeForReplacement.Right;
+					}
+					return;
+				}
+				prevNode = node;
+				if (compare > 0) {
+					prevStep = SIDE.LEFT;
+					node = node.Left;
+				} else {
+					prevStep = SIDE.RIGHT;
+					node = node.Right;
 				}
 			}
 		}
+
 
 		public void InsertPlace(Node<Tn> startNode, Node<Tn> newNode) {
 			if (newNode.Key.CompareTo(startNode.Key) < 0) {
