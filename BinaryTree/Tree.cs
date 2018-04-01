@@ -7,17 +7,33 @@ using System.Threading.Tasks;
 namespace BinaryTree {
 	class Tree<Tn> where Tn : IComparable {
 		public string Title;
-		public Node<Tn> Root;
-		public Tree(string _title, Node<Tn> _root) {
+		public Node<Tn> Root = null;
+
+		public Tree(string _title) {
 			this.Title = _title;
-			this.Root = _root;
 		}
 
 		public void AddNode(Node<Tn> newNode) {
-			if (Root.Key == null) {
+			if (Root == null) {
 				Root = newNode;
 			} else {
 				InsertPlace(Root, newNode);
+			}
+		}
+
+		public void AddNodes(Node<Tn>[] newNodes) {
+			foreach(Node<Tn> node in newNodes) {
+				this.AddNode(node);
+			}
+		}
+
+		public void AddValue(Tn value) {
+			this.AddNode(new Node<Tn>(value));
+		}
+
+		public void AddValues(Tn[] values) {
+			foreach(Tn value in values) {
+				this.AddValue(value);
 			}
 		}
 

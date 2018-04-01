@@ -7,14 +7,11 @@ using System.Threading.Tasks;
 namespace BinaryTree {
 	class Program {
 		static void Main(string[ ] args) {
-			Tree<int> myTree = new Tree<int>("First", new Node<int>(4));
-			myTree.AddNode(new Node<int>(2));
-			myTree.AddNode(new Node<int>(1));
-			myTree.AddNode(new Node<int>(3));
-			myTree.AddNode(new Node<int>(5));
-			myTree.AddNode(new Node<int>(7));
-			myTree.AddNode(new Node<int>(6));
-			myTree.AddNode(new Node<int>(8));
+			Tree<int> myTree = new Tree<int>("First");
+			myTree.AddNode(new Node<int>(4));
+			myTree.AddNodes(new []{ new Node<int>(2), new Node<int>(1), new Node<int>(3)});
+			myTree.AddValue(5);
+			myTree.AddValues(new[ ] { 7, 6, 8 });
 
 			myTree.Remove(5);
 
