@@ -8,34 +8,26 @@ namespace BinaryTree {
 	class Tree<Tn> where Tn : IComparable {
 		public string Title;
 		public Node<Tn> Root = null;
-		public bool autoBalancing = false;
+		public bool AutoBalancing = false;
 
 		private enum SIDE {
 			LEFT, RIGHT, NONE
 		}
 
-		public Tree(string _title) {
+		public Tree(string _title, bool _autoBalancing = true) {
 			this.Title = _title;
+			this.AutoBalancing = _autoBalancing;
 		}
 
-		public bool AutoBalances( ) {
-			if (autoBalancing) {
-				Console.WriteLine("Autobalancing off.");
-			} else {
-				Console.WriteLine("Autobalancing on.");
-			}
-			return !autoBalancing;
-		}
-
-		public void AddNode(Node<Tn> newNode) {
+		private void AddNode(Node<Tn> newNode) {
 			if (Root == null) {
 				Root = newNode;
 			} else {
-				InsertPlace(Root, newNode);
+				InsertNode(newNode);
 			}
 		}
 
-		public void AddNodes(Node<Tn>[ ] newNodes) {
+		private void AddNodes(Node<Tn>[ ] newNodes) {
 			foreach (Node<Tn> node in newNodes) {
 				this.AddNode(node);
 			}
@@ -51,12 +43,39 @@ namespace BinaryTree {
 			}
 		}
 
+		/// <summary>
+		/// Insert new node in subtree
+		/// </summary>
+		/// <param name="newNode">Node to insert</param>
+		/// <param name="startNode">Root node of subtree (default = root node of current tree)</param>
+		private void InsertNode(Node<Tn> newNode, Node<Tn> startNode = null) {
+			if (startNode == null) {
+				startNode = Root;
+			}
+			if (newNode.Value.CompareTo(startNode.Value) < 0) {
+				if (startNode.Left == null) {
+					startNode.Left = newNode;
+				} else {
+					InsertNode(newNode, startNode.Left);
+				}
+			} else {
+				if (startNode.Right == null) {
+					startNode.Right = newNode;
+				} else {
+					InsertNode(newNode, startNode.Right);
+				}
+			}
+			if (AutoBalancing) {
+				this.Balance( );
+			}
+		}
+
 		public Node<Tn> Find(Tn keyToFind, out Node<Tn> rootNode) {
 			Node<Tn> nodeToFind = Root;
 			rootNode = null;
-			while (nodeToFind.Key.CompareTo(keyToFind) != 0) {
+			while (nodeToFind.Value.CompareTo(keyToFind) != 0) {
 				rootNode = nodeToFind;
-				if (nodeToFind.Key.CompareTo(keyToFind) < 0) {
+				if (nodeToFind.Value.CompareTo(keyToFind) < 0) {
 					nodeToFind = nodeToFind.Right;
 				} else {
 					nodeToFind = nodeToFind.Left;
@@ -70,7 +89,7 @@ namespace BinaryTree {
 			SIDE prevStep = SIDE.NONE;
 			Node<Tn> node = this.Root;
 			while (node != null) {
-				var compare = node.Key.CompareTo(keyToRemove);
+				var compare = node.Value.CompareTo(keyToRemove);
 				if (compare == 0) {
 					if (node.Left == null && node.Right == null) {
 						if (prevNode == null) {
@@ -114,7 +133,7 @@ namespace BinaryTree {
 						prevNodeForReplacement = nodeForReplacement;
 						nodeForReplacement = nodeForReplacement.Left;
 					}
-					node.Key = nodeForReplacement.Key;
+					node.Value = nodeForReplacement.Value;
 					if (prevNodeForReplacement == null) {
 						node.Right = nodeForReplacement.Right;
 					} else {
@@ -131,146 +150,142 @@ namespace BinaryTree {
 					node = node.Right;
 				}
 			}
-			if (autoBalancing) {
-				this.Balancing( );
+			if (AutoBalancing) {
+				this.Balance( );
 			}
 		}
 
-
-		public void InsertPlace(Node<Tn> startNode, Node<Tn> newNode) {
-			if (newNode.Key.CompareTo(startNode.Key) < 0) {
-				if (startNode.Left == null) {
-					startNode.Left = newNode;
-				} else {
-					InsertPlace(startNode.Left, newNode);
-				}
-			} else {
-				if (startNode.Right == null) {
-					startNode.Right = newNode;
-				} else {
-					InsertPlace(startNode.Right, newNode);
-				}
+		public List<Tn> LCR(Node<Tn> current = null) {
+			if (current == null) {
+				current = this.Root;
 			}
-			if(autoBalancing) {
-				this.Balancing( );
+			List<Tn> result = new List<Tn>( );
+			if (current.Left != null) {
+				result.AddRange(LCR(current.Left));
 			}
-		}
-
-		public void Inorder( ) {
-			Console.Write("Inorder:");
-			Tree<Tn> copyTree = this;
-			LCR(copyTree.Root);
-			Console.Write("\nPress to continue...");
-			Console.ReadLine( );
-		}
-
-		private void LCR(Node<Tn> current) {
-			if (current != null) {
-				LCR(current.Left);
-				Console.Write(" " + current.Key);
-				LCR(current.Right);
+			result.Add(current.Value);
+			if (current.Right != null) {
+				result.AddRange(LCR(current.Right));
 			}
+			return result;
 		}
 
-		public void Preorder( ) {
-			Console.Write("Preorder:");
-			LRC(this.Root);
-			Console.Write("\nPress to continue...");
-			Console.ReadLine( );
-		}
-
-		private void LRC(Node<Tn> current) {
-			if (current != null) {
-				Console.Write(" " + current.Key);
-				LRC(current.Left);
-				LRC(current.Right);
+		public List<Tn> LRC(Node<Tn> current = null) {
+			if (current == null) {
+				current = this.Root;
 			}
-		}
-
-		public void Postorder( ) {
-			Console.Write("Postorder:");
-			RCL(this.Root);
-			Console.Write("\nPress to continue...");
-			Console.ReadLine( );
-		}
-
-		private void RCL(Node<Tn> current) {
-			if (current != null) {
-				RCL(current.Right);
-				RCL(current.Left);
-				Console.Write(" " + current.Key);
+			List<Tn> result = new List<Tn>( );
+			result.Add(current.Value);
+			if (current.Left != null) {
+				result.AddRange(LCR(current.Left));
 			}
+			if (current.Right != null) {
+				result.AddRange(LCR(current.Right));
+			}
+			return result;
 		}
 
-		public bool IsBalance(Node<Tn> node) {
+		public List<Tn> RCL(Node<Tn> current = null) {
+			if (current == null) {
+				current = this.Root;
+			}
+			List<Tn> result = new List<Tn>( );
+			if (current.Left != null) {
+				result.AddRange(LCR(current.Left));
+			}
+			if (current.Right != null) {
+				result.AddRange(LCR(current.Right));
+			}
+			result.Add(current.Value);
+			return result;
+		}
+
+		/// <summary>
+		/// Check for tree is already balanced
+		/// </summary>
+		/// <param name="node">Root node of subtree (default = root node of current tree)</param>
+		/// <returns>true if subtree is balanced or false otherwise</returns>
+		public bool IsBalance(Node<Tn> node = null) {
 			if (node == null) {
-				return true;
-			} else {
-				bool leftIsBalance = IsBalance(node.Left);
-				bool rightIsBalance = IsBalance(node.Right);
-				int leftCountLevel = CountLevel(node.Left);
-				int rightCountLevel = CountLevel(node.Right);
-				if (leftIsBalance && rightIsBalance && Math.Abs(leftCountLevel - rightCountLevel) <= 1) {
-					return true;
-				} else {
-					return false;
-				}
+				node = this.Root;
 			}
+			bool leftIsBalance = true;
+			bool rightIsBalance = true;
+			int leftCountLevel = 0;
+			int rightCountLevel = 0;
+			if (node.Left != null) {
+				leftIsBalance = IsBalance(node.Left);
+				leftCountLevel = LevelsCount(node.Left);
+			}
+			if (node.Right != null) {
+				rightIsBalance = IsBalance(node.Right);
+				rightCountLevel = LevelsCount(node.Right);
+			}
+			return (
+				leftIsBalance &&
+				rightIsBalance &&
+				Math.Abs(leftCountLevel - rightCountLevel) <= 1
+			);
 		}
 
-		private int CountLevel(Node<Tn> node) {
+		/// <summary>
+		/// Returns count of levels of tree (or subtree)
+		/// </summary>
+		/// <param name="node">Root node of subtree (default = root node of current tree)</param>
+		/// <returns>Levels' count</returns>
+		private int LevelsCount(Node<Tn> node = null) {
 			if (node == null) {
-				return 0;
-			} else {
-				int leftCountLevel = 1 + CountLevel(node.Left);
-				int rightCountLevel = 1 + CountLevel(node.Right);
-				if (leftCountLevel > rightCountLevel) {
-					return leftCountLevel;
-				} else {
-					return rightCountLevel;
-				}
+				node = this.Root;
 			}
+			int leftCountLevel = node.Left != null ? LevelsCount(node.Left) : 0;
+			int rightCountLevel = node.Right != null ? LevelsCount(node.Right) : 0;
+			return Math.Max(leftCountLevel, rightCountLevel) + 1;
 		}
 
-		public void Balancing( ) {
-			List<Tn> listNodes = new List<Tn>( );
-			getListNodes(this.Root, listNodes);
-			this.Root = null;
-			CreateBalanceTree(this, listNodes);
+		public void Balance( ) {
+			this.Root = SortedArrayToSubtree(this.GetSortedValues( ).ToArray( ));
 		}
 
-		private List<Tn> getListNodes(Node<Tn> current, List<Tn> listNodes) {
-			if (current != null) {
-				getListNodes(current.Left, listNodes);
-				listNodes.Add(current.Key);
-				getListNodes(current.Right, listNodes);
+		/// <summary>
+		/// Returns sorted values of tree (or subtree)
+		/// </summary>
+		/// <param name="current">Node, from which result will be generated (default = root node of current tree)</param>
+		/// <returns>Sorted list of values</returns>
+		private List<Tn> GetSortedValues(Node<Tn> current = null) {
+			if (current == null) {
+				current = this.Root;
 			}
-			return listNodes;
+			List<Tn> result = new List<Tn>( );
+			if (current.Left != null) {
+				result.AddRange(GetSortedValues(current.Left));
+			}
+			result.Add(current.Value);
+			if (current.Right != null) {
+				result.AddRange(GetSortedValues(current.Right));
+			}
+			return result;
 		}
 
-		private void CreateBalanceTree(Tree<Tn> balancTree, List<Tn> listNodes) {
-			List<Tn> listLeftNodes = new List<Tn> { };
-			List<Tn> listRightNodes = new List<Tn> { };
-			int centerList = 0;
-			if (listNodes.Count % 2 == 0) {
-				centerList = Convert.ToInt16(Math.Ceiling(listNodes.Count / 2.0));
-			} else {
-				centerList = Convert.ToInt16(Math.Floor(listNodes.Count / 2.0));
+		/// <summary>
+		/// Returns balanced subtree from sorted array
+		/// </summary>
+		/// <param name="values">Sorted array</param>
+		/// <param name="start">Start of sorted array (default = 0)</param>
+		/// <param name="end">End of sorted array (default = index of last element)</param>
+		/// <returns>Return Node (it can be used to make it Root)</returns>
+		private Node<Tn> SortedArrayToSubtree(Tn[ ] values, int start = 0, int end = -2) {
+			if (end == -2) {
+				end = values.Length - 1;
 			}
-			if (listNodes.Count > 1) {
-					balancTree.AddNode(new Node<Tn>(listNodes[centerList]));
-				for (int index = 0; index < listNodes.Count; index++) {
-					if (index < centerList) {
-						listLeftNodes.Add(listNodes[index]);
-					} else if (index > centerList) {
-						listRightNodes.Add(listNodes[index]);
-					}
-				}
-				CreateBalanceTree(balancTree, listLeftNodes);
-				CreateBalanceTree(balancTree, listRightNodes);
-			} else if (listNodes.Count == 1) {
-				balancTree.AddNode(new Node<Tn>(listNodes[0]));
+			if (start > end) {
+				return null;
 			}
+			int middle = (start + end) / 2;
+			Node<Tn> result = new Node<Tn>(values[middle]);
+			result.Left = SortedArrayToSubtree(values, start, middle - 1);
+			result.Right = SortedArrayToSubtree(values, middle + 1, end);
+			return result;
 		}
+
 	}
 }
